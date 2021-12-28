@@ -4,6 +4,9 @@ using UnityEngine;
 
 public class PlayerWalkState : PlayerBaseState
 {
+    float _factor = 1f;
+    float _timer = 0f;
+
     public PlayerWalkState(PlayerStateMachine ctx, PlayerStateFactory factory)
         : base(ctx, factory)
     {
@@ -38,7 +41,20 @@ public class PlayerWalkState : PlayerBaseState
 
     public override void UpdateState()
     {
-        this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.WalkSpeed;
+        _timer += Time.deltaTime;
+
+        if (_timer > 0.5f)
+        {
+            Vector3 position = this.Ctx.CharacterController.transform.position;
+            Ray rayDown = new Ray(position, Vector3.down);
+            Physics.Raycast(rayDown, out RaycastHit hitDownInfo);
+
+            _factor = (180 - Vector3.Angle(this.Ctx.CharacterController.transform.forward, hitDownInfo.normal)) / 90;
+
+            _timer = 0f;
+        }
+
+        this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.WalkSpeed * _factor;
 
         this.CheckSwitchStates();
     }

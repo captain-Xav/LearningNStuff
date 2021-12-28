@@ -1,9 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerRunState : PlayerBaseState
 {
+    float _factor = 1f;
+    float _timer = 0f;
+
     public PlayerRunState(PlayerStateMachine ctx, PlayerStateFactory factory)
         : base(ctx, factory)
     {
@@ -38,8 +39,21 @@ public class PlayerRunState : PlayerBaseState
 
     public override void UpdateState()
     {
-        this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.RunSpeed;
-        
+        _timer += Time.deltaTime;
+
+        if (_timer > 0.5f)
+        {
+            Vector3 position = this.Ctx.CharacterController.transform.position;
+            Ray rayDown = new Ray(position, Vector3.down);
+            Physics.Raycast(rayDown, out RaycastHit hitDownInfo);
+
+            _factor = (180 - Vector3.Angle(this.Ctx.CharacterController.transform.forward, hitDownInfo.normal)) / 90;
+
+            _timer = 0f;
+        }
+
+        this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.RunSpeed * _factor;
+
         this.CheckSwitchStates();
     }
 }

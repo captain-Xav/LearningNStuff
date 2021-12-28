@@ -30,7 +30,7 @@ public class PlayerStateMachine : MonoBehaviour
     [SerializeField] float _runSpeed = 12f;
     [SerializeField] float _midAirSpeed = 0f;
     [SerializeField] float _maxGravity = -15f;
-    [SerializeField] float _groundedGravity = -1f;
+    [SerializeField] float _groundedGravity = -0.1f;
     [SerializeField] float _fallingGravity = -9.8f;
     [SerializeField] float _rotationFactorPerFrame = 10.0f;
 
