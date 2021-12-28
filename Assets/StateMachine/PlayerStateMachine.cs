@@ -26,16 +26,20 @@ public class PlayerStateMachine : MonoBehaviour
     bool _isJumpPressed = false;
 
     // Constants
-    [SerializeField] float _walkSpeed = 15f;
-    [SerializeField] float _runSpeed = 30f;
-    [SerializeField] float _midAirSpeed = 15f;
-    float _groundedGravity = -1f;
-    float _fallingGravity = -9.8f;
-    float _rotationFactorPerFrame = 10.0f;
+    [SerializeField] float _walkSpeed = 6f;
+    [SerializeField] float _runSpeed = 12f;
+    [SerializeField] float _midAirSpeed = 0f;
+    [SerializeField] float _maxGravity = -15f;
+    [SerializeField] float _groundedGravity = -1f;
+    [SerializeField] float _fallingGravity = -9.8f;
+    [SerializeField] float _rotationFactorPerFrame = 10.0f;
 
     // Jumping variables
-    float _maxJumpHeight = 2.0f;
-    float _maxJumpTime = 0.5f;
+    [SerializeField] float _maxJumpHeight = 2.0f;
+    [SerializeField] float _maxJumpTime = 0.5f;
+    [SerializeField] float _jumpHeightOffset = 1.1f;
+    [SerializeField] float _jumpTimeOffset = .1f;
+
     float _jumpPressTimer = 0f;
     int _jumpCount = 0;
     int _maxJumpCount = 3;
@@ -65,11 +69,8 @@ public class PlayerStateMachine : MonoBehaviour
     public float RunSpeed => _runSpeed;
     public float MidAirSpeed => _midAirSpeed;
     public Vector3 CurrentMovement => _currentMovement;
-    public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = Mathf.Max(value, _fallingGravity); } }
-    public Vector3 AppliedMovementXZ 
-    { 
-        get { return new Vector3(_appliedMovement.x, 0, _appliedMovement.z); } 
-        set { _appliedMovement = new Vector3(value.x, _appliedMovement.y, value.z); } }
+    public float AppliedMovementY { get { return _appliedMovement.y; } set { _appliedMovement.y = Mathf.Max(value, _maxGravity); } }
+    public Vector3 AppliedMovementXZ { get { return new Vector3(_appliedMovement.x, 0, _appliedMovement.z); } set { _appliedMovement = new Vector3(value.x, _appliedMovement.y, value.z); } }
 
     private void Awake()
     {
@@ -95,6 +96,8 @@ public class PlayerStateMachine : MonoBehaviour
         _playerInput.CharacterControls.Jump.started += this.OnJump;
         _playerInput.CharacterControls.Jump.canceled += this.OnJump;
 
+        _playerInput.CharacterControls.ResetJumpVariables.started += _ => this.SetupJumpVariables();
+
         _initiailsjumpVelocities = new float[_maxJumpCount];
         _jumpGravities = new float[_maxJumpCount + 1];
 
@@ -103,12 +106,14 @@ public class PlayerStateMachine : MonoBehaviour
 
     void SetupJumpVariables()
     {
+        Debug.Log("SetupJumpVariables");
+
         float timeToApex = _maxJumpTime / 2;
 
         for (int i = 0; i < _maxJumpCount; i++)
         {
-            float jumpOffset = i * 1.1f;
-            float timeOffset = 1 + i * .1f;
+            float jumpOffset = i * _jumpHeightOffset;
+            float timeOffset = 1 + i * _jumpTimeOffset;
 
             _jumpGravities[i + 1] = (-2 * (_maxJumpHeight + jumpOffset)) / Mathf.Pow(timeToApex * timeOffset, 2);
             _initiailsjumpVelocities[i] = (2 * (_maxJumpHeight + jumpOffset)) / timeToApex * timeOffset;
