@@ -2,13 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerIddleState : PlayerBaseState
+public class PlayerIddleState : SubState<PlayerContext, PlayerStateFactory>
 {
-    public PlayerIddleState(PlayerStateMachine ctx, PlayerStateFactory factory)
-        : base(ctx, factory)
-    {
-        this.EnterState();
-    }
+    public PlayerIddleState(PlayerContext ctx, PlayerStateFactory factory)
+        : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
@@ -24,22 +21,8 @@ public class PlayerIddleState : PlayerBaseState
 
     public override void EnterState()
     {
-        this.Ctx.Animator.SetBool(PlayerStateMachine.IsWalkingHash, false);
-        this.Ctx.Animator.SetBool(PlayerStateMachine.IsRunningHash, false);
-
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, false);
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, false);
         this.Ctx.AppliedMovementXZ = Vector3.zero;
-    }
-
-    public override void ExitState()
-    {
-    }
-
-    public override void InitializeSubState()
-    {
-    }
-
-    public override void UpdateState()
-    {
-        this.CheckSwitchStates();
     }
 }

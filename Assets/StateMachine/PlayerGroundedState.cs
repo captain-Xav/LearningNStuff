@@ -2,16 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerGroundedState : PlayerBaseState
+public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
 {
     bool _isFalling = false;
     float _jumpBuffer = 0f;
 
-    public PlayerGroundedState(PlayerStateMachine ctx, PlayerStateFactory factory)
-        : base(ctx, factory, isRootState: true)
-    {
-        this.InitializeSubState();
-    }
+    public PlayerGroundedState(PlayerContext ctx, PlayerStateFactory factory)
+        : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
@@ -28,12 +25,18 @@ public class PlayerGroundedState : PlayerBaseState
 
     public override void EnterState()
     {
-        // this.Ctx.CurrentMovementY = this.Ctx.GroundedGravity;
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsGroundedHash, true);
         this.Ctx.AppliedMovementY = this.Ctx.GroundedGravity;
+        base.EnterState();
     }
 
     public override void ExitState()
     {
+        base.ExitState();
+
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsGroundedHash, false);
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, false);
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, false);
     }
 
     public override void InitializeSubState()
@@ -54,6 +57,8 @@ public class PlayerGroundedState : PlayerBaseState
 
     public override void UpdateState()
     {
+        this.Ctx.AppliedMovementY = this.Ctx.GroundedGravity;
+
         if (this.Ctx.CharacterController.isGrounded)
         {
             _jumpBuffer = 0f;
@@ -66,15 +71,40 @@ public class PlayerGroundedState : PlayerBaseState
             Ray rayDown = new Ray(position, Vector3.down);
 
             Physics.Raycast(rayDown, out RaycastHit hitDownInfo);
+            // Debug.DrawRay(position, rayDown.direction, Color.blue, 3f);
 
-            if (hitDownInfo.distance < 2f)
+            ////if (hitDownInfo.distance > 0.25f)
+            ////    Debug.Log($"hitDownInfo.distance {hitDownInfo.distance}");
+
+            if (hitDownInfo.distance < 0.3f)
             {
-                position.y = hitDownInfo.point.y + (0.5f * Vector3.Angle(Vector3.up, hitDownInfo.normal) / 100f) ;
+                // position.y = hitDownInfo.point.y + (0.5f * Vector3.Angle(Vector3.up, hitDownInfo.normal) / 100f) ;
+                Vector3 pente = Vector3.Cross(Vector3.Cross(Vector3.up, this.Ctx.AppliedMovementXZ), hitDownInfo.normal);
+                // Debug.DrawRay(position, pente, Color.red, 3f);
+                //Debug.DrawLine(position, position + this.Ctx.AppliedMovementXZ * Time.deltaTime, Color.green, 3f);
+                Debug.DrawRay(position, this.Ctx.AppliedMovementXZ, Color.green, 3f);
+                Debug.DrawRay(position, pente, Color.red, 3f);
 
-                this.Ctx.CharacterController.transform.position = position;
+                float angle = Vector3.Angle(this.Ctx.AppliedMovementXZ, pente);
+                Debug.Log($"pente: {this.Ctx.CharacterController.transform.forward}");
+                Debug.Log($"AppliedMovementXZ: {this.Ctx.AppliedMovementXZ.normalized}");
+                Debug.Log($"pente: {pente.normalized}");
+                Debug.Log($"angle: {angle}");
+                Debug.Log($"sdj: {this.Ctx.AppliedMovementXZ.magnitude}");
+                Debug.Log($"opp: {Mathf.Tan(Mathf.Deg2Rad * angle) * this.Ctx.AppliedMovementXZ.magnitude}");
+                //Debug.DrawLine(position, position + projection, Color.blue, 3f);
+                Debug.DrawRay(position, new Vector3(this.Ctx.AppliedMovementXZ.x, Mathf.Min(-Mathf.Tan(Mathf.Deg2Rad * angle) * this.Ctx.AppliedMovementXZ.magnitude, this.Ctx.GroundedGravity), this.Ctx.AppliedMovementXZ.z), Color.blue, 3f);
+
+                // this.Ctx.CharacterController.enabled = false;
+                // this.Ctx.CharacterController.transform.position = position;
+                // this.Ctx.CharacterController.enabled = true;
+                this.Ctx.AppliedMovementY = Mathf.Min(-Mathf.Tan(Mathf.Deg2Rad * angle) * this.Ctx.AppliedMovementXZ.magnitude, this.Ctx.GroundedGravity);
+                Debug.Log($"Y: {this.Ctx.AppliedMovementY}");
+
             }
             else
             {
+
                 _jumpBuffer += Time.deltaTime;
                 _isFalling = true;
             }
@@ -84,6 +114,6 @@ public class PlayerGroundedState : PlayerBaseState
             _jumpBuffer += Time.deltaTime;
         }
 
-        this.CheckSwitchStates();
+        base.UpdateState();
     }
 }

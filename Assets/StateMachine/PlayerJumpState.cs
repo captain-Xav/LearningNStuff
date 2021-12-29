@@ -1,16 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerJumpState : PlayerBaseState
+public class PlayerJumpState : SuperState<PlayerContext, PlayerStateFactory>
 {
     private float _currentVelocityY;
 
-    public PlayerJumpState(PlayerStateMachine ctx, PlayerStateFactory factory)
-        : base(ctx, factory, isRootState: true)
-    {
-        this.InitializeSubState();
-    }
+    public PlayerJumpState(PlayerContext ctx, PlayerStateFactory factory)
+        : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
@@ -18,21 +14,29 @@ public class PlayerJumpState : PlayerBaseState
         {
             this.SwitchState(this.Factory.Grounded());
         }
+        else if (this.CheckWallSlideCondition())
+        {
+            this.SwitchState(this.Factory.WallSlide());
+        }
     }
 
     public override void EnterState()
     {
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsJumpingHash, true);
         this.HandleJump();
+        base.EnterState();
     }
 
     public override void ExitState()
     {
-        this.Ctx.Animator.SetBool(PlayerStateMachine.IsJumpingHash, false);
+        base.ExitState();
+
+        this.Ctx.Animator.SetBool(AnimatorHelper.IsJumpingHash, false);
         this.Ctx.CurrentJumpCountResetRoutine = this.Ctx.StartCoroutine(this.JumpCountResetRoutine());
         if (this.Ctx.JumpCount == this.Ctx.MaxJumpCount)
         {
             this.Ctx.JumpCount = 0;
-            this.Ctx.Animator.SetInteger(PlayerStateMachine.JumpCountHash, 0);
+            this.Ctx.Animator.SetInteger(AnimatorHelper.JumpCountHash, 0);
         }
     }
 
@@ -45,7 +49,7 @@ public class PlayerJumpState : PlayerBaseState
     {
         this.HandleGravity();
 
-        this.CheckSwitchStates();
+        base.UpdateState();
     }
 
     void HandleJump()
@@ -55,9 +59,8 @@ public class PlayerJumpState : PlayerBaseState
             this.Ctx.StopCoroutine(this.Ctx.CurrentJumpCountResetRoutine);
         }
 
-        this.Ctx.Animator.SetBool(PlayerStateMachine.IsJumpingHash, true);
         this.Ctx.JumpCount += 1;
-        this.Ctx.Animator.SetInteger(PlayerStateMachine.JumpCountHash, this.Ctx.JumpCount);
+        this.Ctx.Animator.SetInteger(AnimatorHelper.JumpCountHash, this.Ctx.JumpCount);
         _currentVelocityY = this.Ctx.InitialjumpVelocities[this.Ctx.JumpCount - 1];
         this.Ctx.AppliedMovementY = this.Ctx.InitialjumpVelocities[this.Ctx.JumpCount - 1];
     }
@@ -66,7 +69,7 @@ public class PlayerJumpState : PlayerBaseState
     {
         float fallMutiplier = this.Ctx.AppliedMovementY <= 0.0f || !this.Ctx.IsJumpPressed ? 2.0f : 1.0f;
         float previousYVelocity = _currentVelocityY;
-        _currentVelocityY = _currentVelocityY + (this.Ctx.JumpGravities[this.Ctx.JumpCount] * fallMutiplier * Time.deltaTime);
+        _currentVelocityY += (this.Ctx.JumpGravities[this.Ctx.JumpCount] * fallMutiplier * Time.deltaTime);
         this.Ctx.AppliedMovementY = (previousYVelocity + _currentVelocityY) * .5f;
     }
 
@@ -74,5 +77,13 @@ public class PlayerJumpState : PlayerBaseState
     {
         yield return new WaitForSeconds(.25f);
         this.Ctx.JumpCount = 0;
+    }
+
+    public bool CheckWallSlideCondition()
+    {
+        Ray rayFoward = new Ray(this.Ctx.CharacterController.transform.position, this.Ctx.CharacterController.transform.forward);
+        Physics.Raycast(rayFoward, out RaycastHit hitDownInfo);
+
+        return hitDownInfo.distance < 0.5f && Mathf.Abs(Vector3.Angle(Vector3.up, hitDownInfo.normal) - 90) < 10;
     }
 }

@@ -1,13 +1,10 @@
 using UnityEngine;
 
-public class MidAirState : PlayerBaseState
+public class MidAirState : SubState<PlayerContext, PlayerStateFactory>
 {
     float _midAirSpeed;
-    public MidAirState(PlayerStateMachine ctx, PlayerStateFactory factory)
-        : base(ctx, factory)
-    {
-        this.EnterState();
-    }
+    public MidAirState(PlayerContext ctx, PlayerStateFactory factory)
+        : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
@@ -29,14 +26,11 @@ public class MidAirState : PlayerBaseState
     {
     }
 
-    public override void InitializeSubState()
-    {
-    }
-
     public override void UpdateState()
     {
-        this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * _midAirSpeed;
+        if (this.Ctx.IsMovementPressed)
+            this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * _midAirSpeed;
 
-        this.CheckSwitchStates();
+        base.UpdateState();
     }
 }

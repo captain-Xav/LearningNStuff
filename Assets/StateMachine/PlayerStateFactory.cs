@@ -1,44 +1,46 @@
-public class PlayerStateFactory
+public class PlayerStateFactory : StateFactory<PlayerContext>
 {
-    PlayerStateMachine _context;
 
-    public PlayerStateFactory(PlayerStateMachine currentContext)
+    public PlayerStateFactory(PlayerContext currentContext)
+        : base(currentContext) { }
+
+    public BaseState<PlayerContext, PlayerStateFactory> Idle()
     {
-        _context = currentContext;
+        return new PlayerIddleState(this.Context, this);
     }
 
-    public PlayerBaseState Idle()
+    public BaseState<PlayerContext, PlayerStateFactory> Walk()
     {
-        return new PlayerIddleState(_context, this);
+        return new PlayerWalkState(this.Context, this);
     }
 
-    public PlayerBaseState Walk()
+    public BaseState<PlayerContext, PlayerStateFactory> Run()
     {
-        return new PlayerWalkState(_context, this);
+        return new PlayerRunState(this.Context, this);
     }
 
-    public PlayerBaseState Run()
+    public BaseState<PlayerContext, PlayerStateFactory> Jump()
     {
-        return new PlayerRunState(_context, this);
+        return new PlayerJumpState(this.Context, this);
     }
 
-    public PlayerBaseState Jump()
+    public BaseState<PlayerContext, PlayerStateFactory> Grounded()
     {
-        return new PlayerJumpState(_context, this);
+        return new PlayerGroundedState(this.Context, this);
     }
 
-    public PlayerBaseState Grounded()
+    public BaseState<PlayerContext, PlayerStateFactory> Fall()
     {
-        return new PlayerGroundedState(_context, this);
+        return new PlayerFallState(this.Context, this);
     }
 
-    public PlayerBaseState Fall()
+    public BaseState<PlayerContext, PlayerStateFactory> MidAir()
     {
-        return new PlayerFallState(_context, this);
+        return new MidAirState(this.Context, this);
     }
 
-    public PlayerBaseState MidAir()
+    public BaseState<PlayerContext, PlayerStateFactory> WallSlide()
     {
-        return new MidAirState(_context, this);
+        return new WallSlideState(this.Context, this);
     }
 }
