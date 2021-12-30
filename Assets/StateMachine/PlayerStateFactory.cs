@@ -1,46 +1,58 @@
+using System.Collections.Generic;
+
+public enum PlayerState
+{
+    Grounded,
+    Jump,
+    Fall,
+    WallSlide,
+    Idle,
+    Walk,
+    Run,
+    MidAir
+}
+
 public class PlayerStateFactory : StateFactory<PlayerContext>
 {
+    private Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>> State = new Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>>();
 
     public PlayerStateFactory(PlayerContext currentContext)
         : base(currentContext) { }
 
-    public BaseState<PlayerContext, PlayerStateFactory> Idle()
+    public BaseState<PlayerContext, PlayerStateFactory> GetState(PlayerState stateToGet)
     {
-        return new PlayerIddleState(this.Context, this);
+        if (!this.State.TryGetValue(stateToGet, out BaseState<PlayerContext, PlayerStateFactory> state))
+        {
+            state = this.CreateState(stateToGet);
+            this.State.Add(stateToGet, state);
+        }
+
+        return state;
     }
 
-    public BaseState<PlayerContext, PlayerStateFactory> Walk()
+    private BaseState<PlayerContext, PlayerStateFactory> CreateState(PlayerState state)
     {
-        return new PlayerWalkState(this.Context, this);
-    }
+        switch (state)
+        {
+            case PlayerState.Grounded:
+                return new PlayerGroundedState(this.Context, this);
+            case PlayerState.Jump:
+                return new PlayerJumpState(this.Context, this);
+            case PlayerState.Fall:
+                return new PlayerFallState(this.Context, this);
+            case PlayerState.WallSlide:
+                return new PlayerWallSlideState(this.Context, this);
+            case PlayerState.Idle:
+                return new PlayerIdleState(this.Context, this);
+            case PlayerState.Walk:
+                return new PlayerWalkState(this.Context, this);
+            case PlayerState.Run:
+                return new PlayerRunState(this.Context, this);
+            case PlayerState.MidAir:
+                return new PlayerMidAirState(this.Context, this);
+            default:
+                return new PlayerGroundedState(this.Context, this);
 
-    public BaseState<PlayerContext, PlayerStateFactory> Run()
-    {
-        return new PlayerRunState(this.Context, this);
-    }
-
-    public BaseState<PlayerContext, PlayerStateFactory> Jump()
-    {
-        return new PlayerJumpState(this.Context, this);
-    }
-
-    public BaseState<PlayerContext, PlayerStateFactory> Grounded()
-    {
-        return new PlayerGroundedState(this.Context, this);
-    }
-
-    public BaseState<PlayerContext, PlayerStateFactory> Fall()
-    {
-        return new PlayerFallState(this.Context, this);
-    }
-
-    public BaseState<PlayerContext, PlayerStateFactory> MidAir()
-    {
-        return new MidAirState(this.Context, this);
-    }
-
-    public BaseState<PlayerContext, PlayerStateFactory> WallSlide()
-    {
-        return new WallSlideState(this.Context, this);
+        }
     }
 }

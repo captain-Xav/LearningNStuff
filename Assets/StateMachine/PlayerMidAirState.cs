@@ -1,9 +1,9 @@
 using UnityEngine;
 
-public class MidAirState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerMidAirState : SubState<PlayerContext, PlayerStateFactory>
 {
     float _midAirSpeed;
-    public MidAirState(PlayerContext ctx, PlayerStateFactory factory)
+    public PlayerMidAirState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
     public override void CheckSwitchStates()

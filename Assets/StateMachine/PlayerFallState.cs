@@ -3,20 +3,19 @@
 public class PlayerFallState : SuperState<PlayerContext, PlayerStateFactory>
 {
     float _gravity;
-    bool _isGrounded = false;
 
     public PlayerFallState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
-        if (_isGrounded || this.Ctx.CharacterController.isGrounded)
+        if (this.Ctx.CharacterPhysics.IsGrounded)
         {
-            this.SwitchState(this.Factory.Grounded());
+            this.SwitchState(this.Factory.GetState(PlayerState.Grounded));
         }
-        else if (this.CheckWallSlideCondition())
+        else if (PlayerWallSlideState.IsWallSliding(this.Ctx.CharacterController, out _))
         {
-            this.SwitchState(this.Factory.WallSlide());
+            this.SwitchState(this.Factory.GetState(PlayerState.WallSlide));
         }
     }
 
@@ -36,28 +35,12 @@ public class PlayerFallState : SuperState<PlayerContext, PlayerStateFactory>
 
     public override void InitializeSubState()
     {
-        this.SetSubState(this.Factory.MidAir());
+        this.SetSubState(this.Factory.GetState(PlayerState.MidAir));
     }
 
     public override void UpdateState()
     {
         this.Ctx.AppliedMovementY = _gravity *= 1.10f;
-
-        Ray rayDown = new Ray(this.Ctx.CharacterController.transform.position, Vector3.down);
-        Physics.Raycast(rayDown, out RaycastHit hitDownInfo);
-
-        if (hitDownInfo.distance < 0.1f)
-            _isGrounded = true;
-
-
         base.UpdateState();
-    }
-
-    public bool CheckWallSlideCondition()
-    {
-        Ray rayFoward = new Ray(this.Ctx.CharacterController.transform.position, this.Ctx.CharacterController.transform.forward);
-        Physics.Raycast(rayFoward, out RaycastHit hitDownInfo);
-
-        return hitDownInfo.distance < 0.5f && Mathf.Abs(Vector3.Angle(Vector3.up, hitDownInfo.normal) - 90) < 10;
     }
 }

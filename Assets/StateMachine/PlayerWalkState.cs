@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
 {
     float _factor = 1f;
-    float _timer = 0f;
+    // sfloat _timer = 0f;
 
     public PlayerWalkState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
@@ -14,11 +14,11 @@ public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
     {
         if (!this.Ctx.IsMovementPressed)
         {
-            this.SwitchState(this.Factory.Idle());
+            this.SwitchState(this.Factory.GetState(PlayerState.Idle));
         }
         else if (this.Ctx.IsRunPressed)
         {
-            this.SwitchState(this.Factory.Run());
+            this.SwitchState(this.Factory.GetState(PlayerState.Run));
         }
     }
 

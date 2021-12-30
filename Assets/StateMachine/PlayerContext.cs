@@ -2,13 +2,10 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+[RequireComponent(typeof(CharacterController), typeof(CharacterPhysics), typeof(Animator))]
 public class PlayerContext : Context
 {
     // Reference variables
-    PlayerInput _playerInput;
-    CharacterController _characterController;
-    Animator _animator;
-    Camera _camera;
 
     // Player input values
     Vector2 _currentMovementInput;
@@ -16,29 +13,25 @@ public class PlayerContext : Context
     Vector3 _appliedMovement;
     bool _isMovementPressed;
     bool _isRunPressed;
-    bool _isJumpPressed = false;
+    bool _isJumpPressed;
 
     // Constants
     [SerializeField] float _walkSpeed = 6f;
     [SerializeField] float _runSpeed = 12f;
-    //[SerializeField] float _midAirSpeed = 0f;
     [SerializeField] float _maxGravity = -15f;
     [SerializeField] float _groundedGravity = -0.1f;
     [SerializeField] float _fallingGravity = -9.8f;
     [SerializeField] float _rotationFactorPerFrame = 10.0f;
 
     // Jumping variables
-    [SerializeField] float _maxJumpHeight = 2.0f;
-    [SerializeField] float _maxJumpTime = 0.5f;
-    [SerializeField] float _jumpHeightOffset = 1.1f;
-    [SerializeField] float _jumpTimeOffset = .1f;
-
+    float _maxJumpHeight = 2.0f;
+    float _maxJumpTime = 0.5f;
+    float _jumpHeightOffset = 1.1f;
+    float _jumpTimeOffset = .1f;
     float _jumpPressTimer = 0f;
-    int _jumpCount = 0;
     int _maxJumpCount = 3;
     float[] _initiailsjumpVelocities;
     float[] _jumpGravities;
-    Coroutine _currentJumpCountResetRoutine = null;
 
     PlayerStateFactory _stateFactory;
 
@@ -46,15 +39,15 @@ public class PlayerContext : Context
     public Text _subStateText;
 
     // Getters and Setters
-    public CharacterController CharacterController => _characterController;
+    PlayerInput PlayerInput { get; set; }
+    public CharacterController CharacterController { get; private set; }
+    public CharacterPhysics CharacterPhysics { get; private set; }
+    public Animator Animator { get; private set; }
     public bool IsJumpPressed => _isJumpPressed;
     public bool IsMovementPressed => _isMovementPressed;
     public bool IsRunPressed => _isRunPressed;
-    public Animator Animator => _animator;
-    public Coroutine CurrentJumpCountResetRoutine { get { return _currentJumpCountResetRoutine; } set { _currentJumpCountResetRoutine = value; } }
     public float[] InitialjumpVelocities => _initiailsjumpVelocities;
     public float[] JumpGravities => _jumpGravities;
-    public int JumpCount { get { return _jumpCount; } set { _jumpCount = value; } }
     public int MaxJumpCount => _maxJumpCount;
     public float JumpPressTimer => _jumpPressTimer;
     public float GroundedGravity => _groundedGravity;
@@ -68,28 +61,28 @@ public class PlayerContext : Context
     private void Awake()
     {
         // Set reference variables
-        _playerInput = new PlayerInput();
-        _characterController = this.GetComponent<CharacterController>();
-        _animator = this.GetComponent<Animator>();
-        _camera = Camera.main;
+        this.PlayerInput = new PlayerInput();
+        this.CharacterController = this.GetComponent<CharacterController>();
+        this.CharacterPhysics = this.GetComponent<CharacterPhysics>();
+        this.Animator = this.GetComponent<Animator>();
 
         // Setup state
         _stateFactory = new PlayerStateFactory(this);
-        this.CurrentState = this._stateFactory.Fall();
+        this.CurrentState = this._stateFactory.GetState(PlayerState.Fall);
         this.CurrentState.EnterState();
 
         // Set the player input callbacks
-        _playerInput.CharacterControls.Move.started += this.OnMovementInput;
-        _playerInput.CharacterControls.Move.performed += this.OnMovementInput;
-        _playerInput.CharacterControls.Move.canceled += this.OnMovementInput;
+        this.PlayerInput.CharacterControls.Move.started += this.OnMovementInput;
+        this.PlayerInput.CharacterControls.Move.performed += this.OnMovementInput;
+        this.PlayerInput.CharacterControls.Move.canceled += this.OnMovementInput;
 
-        _playerInput.CharacterControls.Run.started += this.OnRun;
-        _playerInput.CharacterControls.Run.canceled += this.OnRun;
+        this.PlayerInput.CharacterControls.Run.started += this.OnRun;
+        this.PlayerInput.CharacterControls.Run.canceled += this.OnRun;
 
-        _playerInput.CharacterControls.Jump.started += this.OnJump;
-        _playerInput.CharacterControls.Jump.canceled += this.OnJump;
+        this.PlayerInput.CharacterControls.Jump.started += this.OnJump;
+        this.PlayerInput.CharacterControls.Jump.canceled += this.OnJump;
 
-        _playerInput.CharacterControls.ResetJumpVariables.started += _ => this.SetupJumpVariables();
+        this.PlayerInput.CharacterControls.ResetJumpVariables.started += _ => this.SetupJumpVariables();
 
         _initiailsjumpVelocities = new float[_maxJumpCount];
         _jumpGravities = new float[_maxJumpCount + 1];
@@ -133,11 +126,12 @@ public class PlayerContext : Context
     // Update is called once per frame
     void Update()
     {
+        this.CharacterPhysics.UpdatePhysics();
         // Debug.Log($"_appliedMovement: {_appliedMovement}");
         this.HandleMovement();
         this.HandleRotation();
-        _characterController.Move(_appliedMovement * Time.deltaTime);
         this.CurrentState.UpdateStates();
+        this.CharacterController.Move(_appliedMovement * Time.deltaTime);
         this.UpdateStateTexts();
     }
 
@@ -145,8 +139,8 @@ public class PlayerContext : Context
     {
         if (_isMovementPressed)
         {
-            Vector3 foward = _camera.transform.rotation * Vector3.forward;
-            Vector3 right = _camera.transform.rotation * Vector3.right;
+            Vector3 foward = Camera.main.transform.rotation * Vector3.forward;
+            Vector3 right = Camera.main.transform.rotation * Vector3.right;
             foward.y = 0f;
             right.y = 0f;
 
@@ -174,6 +168,6 @@ public class PlayerContext : Context
         _subStateText.text = subStateText ?? "No Sub State";
     }
 
-    private void OnEnable() => _playerInput.CharacterControls.Enable();
-    private void OnDisable() => _playerInput.CharacterControls.Disable();
+    private void OnEnable() => this.PlayerInput.CharacterControls.Enable();
+    private void OnDisable() => this.PlayerInput.CharacterControls.Disable();
 }

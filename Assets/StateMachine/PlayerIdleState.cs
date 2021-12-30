@@ -2,20 +2,20 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerIddleState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerIdleState : SubState<PlayerContext, PlayerStateFactory>
 {
-    public PlayerIddleState(PlayerContext ctx, PlayerStateFactory factory)
+    public PlayerIdleState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
     public override void CheckSwitchStates()
     {
         if (this.Ctx.IsMovementPressed && this.Ctx.IsRunPressed)
         {
-            this.SwitchState(this.Factory.Run());
+            this.SwitchState(this.Factory.GetState(PlayerState.Run));
         }
         else if (this.Ctx.IsMovementPressed)
         {
-            this.SwitchState(this.Factory.Walk());
+            this.SwitchState(this.Factory.GetState(PlayerState.Walk));
         }
     }
 
