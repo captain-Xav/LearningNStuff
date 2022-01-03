@@ -1,13 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerIdleState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerIdleState : BaseState<PlayerContext, PlayerStateFactory>
 {
     public PlayerIdleState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (this.Ctx.IsMovementPressed && this.Ctx.IsRunPressed)
         {
@@ -19,7 +17,7 @@ public class PlayerIdleState : SubState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, false);
         this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, false);

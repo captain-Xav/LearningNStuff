@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerWallSlideState : SuperState<PlayerContext, PlayerStateFactory>
+public class PlayerWallSlideState : BaseState<PlayerContext, PlayerStateFactory>
 {
     private bool _isWallSliding;
     private bool _isGrounded;
@@ -8,7 +8,7 @@ public class PlayerWallSlideState : SuperState<PlayerContext, PlayerStateFactory
     public PlayerWallSlideState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (_isGrounded)
         {
@@ -20,23 +20,17 @@ public class PlayerWallSlideState : SuperState<PlayerContext, PlayerStateFactory
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWallSlidingHash, true);
-        base.EnterState();
     }
 
-    public override void ExitState()
+    protected override void OnExitState()
     {
-        base.ExitState();
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWallSlidingHash, false);
     }
 
-    public override void InitializeSubState()
-    {
-    }
-
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         if (this.Ctx.CharacterPhysics.IsGrounded)
         {
@@ -58,11 +52,9 @@ public class PlayerWallSlideState : SuperState<PlayerContext, PlayerStateFactory
 
 
                 this.Ctx.AppliedMovementY = projection.y;
-                this.Ctx.AppliedMovementXZ = new Vector3(projection.x, 0, projection.z);
+                this.Ctx.AppliedMovementXZ = projection.XZPlane(); ;
             }
         }
-
-        this.CheckSwitchStates();
     }
 
     public static bool IsWallSliding(CharacterController character, out RaycastHit hitFowardInfo)

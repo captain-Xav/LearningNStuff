@@ -1,13 +1,13 @@
 ﻿using UnityEngine;
 
-public class PlayerFallState : SuperState<PlayerContext, PlayerStateFactory>
+public class PlayerFallState : BaseState<PlayerContext, PlayerStateFactory>
 {
     float _gravity;
 
     public PlayerFallState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (this.Ctx.CharacterPhysics.IsGrounded)
         {
@@ -19,28 +19,24 @@ public class PlayerFallState : SuperState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsFallingHash, true);
         _gravity = this.Ctx.FallingGravity;
-        base.EnterState();
     }
 
-    public override void ExitState()
+    protected override void OnExitState()
     {
-        base.ExitState();
-
         this.Ctx.Animator.SetBool(AnimatorHelper.IsFallingHash, false);
     }
 
-    public override void InitializeSubState()
+    protected override void OnInitializeSubState()
     {
         this.SetSubState(this.Factory.GetState(PlayerState.MidAir));
     }
 
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         this.Ctx.AppliedMovementY = _gravity *= 1.10f;
-        base.UpdateState();
     }
 }

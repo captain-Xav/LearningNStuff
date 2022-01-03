@@ -1,16 +1,12 @@
 using UnityEngine;
 
-public class PlayerMidAirState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerMidAirState : BaseState<PlayerContext, PlayerStateFactory>
 {
     float _midAirSpeed;
     public PlayerMidAirState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
-    {
-    }
-
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         if (this.Ctx.IsMovementPressed)
         {
@@ -22,15 +18,11 @@ public class PlayerMidAirState : SubState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void ExitState()
-    {
-    }
-
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         if (this.Ctx.IsMovementPressed)
+        {
             this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * _midAirSpeed;
-
-        base.UpdateState();
+        }
     }
 }

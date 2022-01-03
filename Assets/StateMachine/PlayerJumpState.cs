@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class PlayerJumpState : SuperState<PlayerContext, PlayerStateFactory>
+public class PlayerJumpState : BaseState<PlayerContext, PlayerStateFactory>
 {
     private float _currentVelocityY;
     private int JumpCount { get; set; }
@@ -10,7 +10,7 @@ public class PlayerJumpState : SuperState<PlayerContext, PlayerStateFactory>
     public PlayerJumpState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (this.Ctx.CharacterPhysics.IsGrounded)
         {
@@ -22,17 +22,14 @@ public class PlayerJumpState : SuperState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsJumpingHash, true);
         this.HandleJump();
-        base.EnterState();
     }
 
-    public override void ExitState()
+    protected override void OnExitState()
     {
-        base.ExitState();
-
         this.Ctx.Animator.SetBool(AnimatorHelper.IsJumpingHash, false);
         this.CurrentJumpCountResetRoutine = this.Ctx.StartCoroutine(this.JumpCountResetRoutine());
         if (this.JumpCount == this.Ctx.MaxJumpCount)
@@ -42,16 +39,14 @@ public class PlayerJumpState : SuperState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void InitializeSubState()
+    protected override void OnInitializeSubState()
     {
         this.SetSubState(this.Factory.GetState(PlayerState.MidAir));
     }
 
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         this.HandleGravity();
-
-        base.UpdateState();
     }
 
     void HandleJump()

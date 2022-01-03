@@ -1,9 +1,9 @@
 ﻿public interface IState
 {
-    void EnterState();
-    void ExitState();
-
-    void UpdateStates();
+    public void CheckSwitchState();
+    public void EnterState();
+    public void ExitState();
+    public void UpdateState();
 
     (string subState, string superState) GetStateTextValues();
 }

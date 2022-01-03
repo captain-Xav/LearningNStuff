@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 public enum PlayerState
@@ -14,45 +15,31 @@ public enum PlayerState
 
 public class PlayerStateFactory : StateFactory<PlayerContext>
 {
-    private Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>> State = new Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>>();
+    private Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>> _state = new Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>>();
 
     public PlayerStateFactory(PlayerContext currentContext)
-        : base(currentContext) { }
+        : base(currentContext)
+    {
+        _state = new Dictionary<PlayerState, BaseState<PlayerContext, PlayerStateFactory>>()
+        {
+            { PlayerState.Grounded, new PlayerGroundedState(this.Context, this) },
+            { PlayerState.Jump, new PlayerJumpState(this.Context, this) },
+            { PlayerState.Fall, new PlayerFallState(this.Context, this) },
+            { PlayerState.WallSlide, new PlayerWallSlideState(this.Context, this) },
+            { PlayerState.Idle, new PlayerIdleState(this.Context, this) },
+            { PlayerState.Walk, new PlayerWalkState(this.Context, this) },
+            { PlayerState.Run, new PlayerRunState(this.Context, this) },
+            { PlayerState.MidAir, new PlayerMidAirState(this.Context, this) }
+        };
+    }
 
     public BaseState<PlayerContext, PlayerStateFactory> GetState(PlayerState stateToGet)
     {
-        if (!this.State.TryGetValue(stateToGet, out BaseState<PlayerContext, PlayerStateFactory> state))
+        if (!this._state.TryGetValue(stateToGet, out BaseState<PlayerContext, PlayerStateFactory> state))
         {
-            state = this.CreateState(stateToGet);
-            this.State.Add(stateToGet, state);
+            throw new Exception("Each state must be initialize in the constructor beforehand");
         }
 
         return state;
-    }
-
-    private BaseState<PlayerContext, PlayerStateFactory> CreateState(PlayerState state)
-    {
-        switch (state)
-        {
-            case PlayerState.Grounded:
-                return new PlayerGroundedState(this.Context, this);
-            case PlayerState.Jump:
-                return new PlayerJumpState(this.Context, this);
-            case PlayerState.Fall:
-                return new PlayerFallState(this.Context, this);
-            case PlayerState.WallSlide:
-                return new PlayerWallSlideState(this.Context, this);
-            case PlayerState.Idle:
-                return new PlayerIdleState(this.Context, this);
-            case PlayerState.Walk:
-                return new PlayerWalkState(this.Context, this);
-            case PlayerState.Run:
-                return new PlayerRunState(this.Context, this);
-            case PlayerState.MidAir:
-                return new PlayerMidAirState(this.Context, this);
-            default:
-                return new PlayerGroundedState(this.Context, this);
-
-        }
     }
 }

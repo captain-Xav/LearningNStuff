@@ -127,11 +127,15 @@ public class PlayerContext : Context
     void Update()
     {
         this.CharacterPhysics.UpdatePhysics();
-        // Debug.Log($"_appliedMovement: {_appliedMovement}");
+
         this.HandleMovement();
         this.HandleRotation();
-        this.CurrentState.UpdateStates();
+
+        this.CurrentState.CheckSwitchState();
+        this.CurrentState.UpdateState();
+
         this.CharacterController.Move(_appliedMovement * Time.deltaTime);
+
         this.UpdateStateTexts();
     }
 

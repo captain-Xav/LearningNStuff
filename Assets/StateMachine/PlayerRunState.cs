@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class PlayerRunState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerRunState : BaseState<PlayerContext, PlayerStateFactory>
 {
     float _factor = 1f;
     // float _timer = 0f;
@@ -8,7 +8,7 @@ public class PlayerRunState : SubState<PlayerContext, PlayerStateFactory>
     public PlayerRunState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (!this.Ctx.IsMovementPressed)
         {
@@ -20,13 +20,13 @@ public class PlayerRunState : SubState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, true);
         this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, true);
     }
 
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         ////_timer += Time.deltaTime;
 
@@ -42,7 +42,5 @@ public class PlayerRunState : SubState<PlayerContext, PlayerStateFactory>
         ////}
 
         this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.RunSpeed * _factor;
-
-        base.UpdateState();
     }
 }

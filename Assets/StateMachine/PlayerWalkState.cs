@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
+public class PlayerWalkState : BaseState<PlayerContext, PlayerStateFactory>
 {
     float _factor = 1f;
     // sfloat _timer = 0f;
@@ -10,7 +8,7 @@ public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
     public PlayerWalkState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         if (!this.Ctx.IsMovementPressed)
         {
@@ -22,13 +20,13 @@ public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, true);
         this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, false);
     }
 
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         ////_timer += Time.deltaTime;
 
@@ -44,7 +42,5 @@ public class PlayerWalkState : SubState<PlayerContext, PlayerStateFactory>
         ////}
 
         this.Ctx.AppliedMovementXZ = this.Ctx.CurrentMovement * this.Ctx.WalkSpeed * _factor;
-
-        base.UpdateState();
     }
 }

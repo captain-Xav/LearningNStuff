@@ -6,8 +6,8 @@ public abstract class BaseState<T_Context, T_Factory> : IState
 {
     protected T_Context Ctx { get; private set; }
     protected T_Factory Factory { get; private set; }
-    public BaseState<T_Context, T_Factory> CurrentSubState { get; private set; }
-    public BaseState<T_Context, T_Factory> CurrentSuperState { get; private set; }
+    private BaseState<T_Context, T_Factory> SubState { get; set; }
+    private BaseState<T_Context, T_Factory> SuperState { get; set; }
 
     protected BaseState(T_Context ctx, T_Factory factory)
     {
@@ -15,22 +15,43 @@ public abstract class BaseState<T_Context, T_Factory> : IState
         this.Factory = factory;
     }
 
-    public virtual void EnterState() { }
-    public virtual void ExitState() { }
-    public virtual void CheckSwitchStates() { }
-    public virtual void UpdateState()
+    protected virtual void OnCheckSwitchState() { }
+    protected virtual void OnEnterState() { }
+    protected virtual void OnExitState() { }
+    protected virtual void OnInitializeSubState() { }
+    protected virtual void OnUpdateState() { }
+
+    public void CheckSwitchState()
     {
-        this.CheckSwitchStates();
+        this.OnCheckSwitchState();
+
+        if (this.SubState != null)
+        {
+            this.SubState.OnCheckSwitchState();
+        }
     }
 
-    public void UpdateStates()
+    public void EnterState()
     {
-        if (this.CurrentSubState != null)
+        this.OnInitializeSubState();
+        this.OnEnterState();
+        this.SubState?.EnterState();
+    }
+
+    public void ExitState()
+    {
+        this.SubState?.EnterState();
+        this.OnExitState();
+    }
+
+    public void UpdateState()
+    {
+        if (this.SubState != null)
         {
-            this.CurrentSubState.UpdateState();
+            this.SubState.UpdateState();
         }
 
-        this.UpdateState();
+        this.OnUpdateState();
     }
 
     protected void SwitchState(BaseState<T_Context, T_Factory> newState)
@@ -40,38 +61,38 @@ public abstract class BaseState<T_Context, T_Factory> : IState
         // New state enter state
         newState.EnterState();
 
-        if (newState is SuperState<T_Context, T_Factory>)
+        if (this.SuperState == null)
         {
             // Switch current state of context
             this.Ctx.CurrentState = newState;
         }
-        else if (this.CurrentSuperState != null)
+        else
         {
             // Set the current super states sub state to the new state
-            this.CurrentSuperState.SetSubState(newState);
+            this.SuperState.SetSubState(newState);
         }
     }
 
     protected void SetSuperState(BaseState<T_Context, T_Factory> newSuperState)
     {
-        this.CurrentSuperState = newSuperState;
+        this.SuperState = newSuperState;
     }
 
     protected void SetSubState(BaseState<T_Context, T_Factory> newSubState)
     {
-        this.CurrentSubState = newSubState;
+        this.SubState = newSubState;
         newSubState.SetSuperState(this);
     }
 
     public (string subState, string superState) GetStateTextValues()
     {
-        if (this is SuperState<T_Context, T_Factory>)
+        if (this.SuperState == null)
         {
-            return (this.CurrentSubState?.ToString(), this.ToString());
+            return (this.SubState?.ToString(), this.ToString());
         }
         else
         {
-            return (this.ToString(), this.CurrentSuperState?.ToString());
+            return (this.ToString(), this.SuperState?.ToString());
         }
     }
 }

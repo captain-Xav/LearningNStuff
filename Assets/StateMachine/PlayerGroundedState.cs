@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
+public class PlayerGroundedState : BaseState<PlayerContext, PlayerStateFactory>
 {
     bool _isFalling = false;
     float _jumpBuffer = 0f;
@@ -10,7 +8,7 @@ public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
     public PlayerGroundedState(PlayerContext ctx, PlayerStateFactory factory)
         : base(ctx, factory) { }
 
-    public override void CheckSwitchStates()
+    protected override void OnCheckSwitchState()
     {
         // If player is grounded and jump is pressed, switch to jump state
         if (this.Ctx.IsJumpPressed && Time.time - 0.1f < this.Ctx.JumpPressTimer)
@@ -23,23 +21,20 @@ public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void EnterState()
+    protected override void OnEnterState()
     {
         this.Ctx.Animator.SetBool(AnimatorHelper.IsGroundedHash, true);
         this.Ctx.AppliedMovementY = this.Ctx.GroundedGravity;
-        base.EnterState();
     }
 
-    public override void ExitState()
+    protected override void OnExitState()
     {
-        base.ExitState();
-
         this.Ctx.Animator.SetBool(AnimatorHelper.IsGroundedHash, false);
         this.Ctx.Animator.SetBool(AnimatorHelper.IsWalkingHash, false);
         this.Ctx.Animator.SetBool(AnimatorHelper.IsRunningHash, false);
     }
 
-    public override void InitializeSubState()
+    protected override void OnInitializeSubState()
     {
         if (!this.Ctx.IsMovementPressed)
         {
@@ -55,7 +50,7 @@ public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
         }
     }
 
-    public override void UpdateState()
+    protected override void OnUpdateState()
     {
         this.Ctx.AppliedMovementY = this.Ctx.GroundedGravity;
 
@@ -74,6 +69,7 @@ public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
                 Debug.DrawRay(this.Ctx.CharacterController.transform.position, projection, Color.blue, 3f);
 
                 this.Ctx.AppliedMovementY = projection.y;
+                this.Ctx.AppliedMovementXZ = projection.XZPlane();
             }
         }
         else
@@ -82,7 +78,5 @@ public class PlayerGroundedState : SuperState<PlayerContext, PlayerStateFactory>
             _jumpBuffer += Time.deltaTime;
             this.Ctx.AppliedMovementY = this.Ctx.FallingGravity;
         }
-
-        base.UpdateState();
     }
 }
